@@ -1,0 +1,147 @@
+---
+title: "Practica 2"
+author: "Wendy Yaneth Medina Orihuela"
+date: "2025-03-05"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+install.packages(c("dplyr", "janitor","zoo","ggplot2","visdat","skimr", "shiny"))
+install.packages("markdown")
+library(dplyr)
+library(janitor)
+library(zoo)
+library(ggplot2)
+library(visdat)
+library(skimr)
+library(shiny)
+library(rmarkdown)
+```
+
+```{r}
+# Realice una revisión de los datos nulos, vacíos o si tienen algún otro carácter
+data_prac_2 <- read.csv("data_prac_2.csv")
+View(data_prac_2)
+
+
+# a) En caso de presentar valores diferentes a tipo numérico (las variables que apliquen), reemplace con NA
+data <- read.csv("data_prac_2.csv", header =T, sep=",", dec=".",
+                 na.strings=(c("","&&","$$","null")))
+
+# (b) Verifique que las variables tengan el fomato adecuado para trabajar
+head(data)
+
+# (c) ¿Hay manera de detectar valores duplicados?, en caso negativo, ¿qué podría proponer como identificador, para evitar duplicados en el data set?
+sum(duplicated(data))
+data %>%
+  janitor::get_dupes()
+
+data <- data %>%
+  distinct()
+sum(duplicated(data))
+
+# (d) Reemplace los valores no disponibles con las técnicas usadas, y haga una tabla resumen sobre los resultados (summary) de las variables numéricas, ¿cuál técnica sugiere usar y por qué?
+
+# Se realizó de esa manera para que cada columna fuera modificada con los valores que previamente se analizaron que eran los mejores para utilizar de acuerdo con su definición y la varibilidad de los datos, resultó casualidad que se utilizaran todas, pero es lo que mejor se considero para su analisis.
+
+sum(is.na(data$edad))
+
+# Edad - mediana
+data$edad <- ifelse(is.na(data$edad), median(data$edad, na.rm = TRUE), data$edad)
+                   
+                   
+# imc - media
+data$imc <- ifelse(is.na(data$imc), mean(data$imc, na.rm = TRUE), data$imc)
+                   
+# hijos - moda
+data$hijos <- ifelse(is.na(data$hijos), mode(data$hijos, na.rm = TRUE), data$hijos)
+                   
+# clm - interpolación
+data$clm <- ifelse(is.na(data$clm), na.approx(data$clm, na.rm = TRUE), data$clm)
+                   
+sum(is.na(data))
+summary(data$edad)
+summary(data$imc)
+summary(data$hijos)
+summary(data$clm)
+
+```
+
+```{r}
+# 2. Teniendo la base funcional, emplee el data set con reemplazamiento mediante interpolación, para realizar lo siguiente:
+data1 <- read.csv("data_prac_2.csv", header =T, sep=",", dec=".",
+                 na.strings=(c("","&&","$$","null")))
+data_inter <- data.frame(lapply (data1, function (x)
+  ifelse(is.na(x), na.approx(x, na.rm = T),x)))
+
+
+# (a) Usando ggplot, realice un histograma para analizar las variables numéricas, ¿este sería el tipo de gráfico más significativo para su análisis univariante?.
+
+# Edad
+ggplot(data_inter, aes(x = edad)) +
+  geom_histogram(binwidth = 0.5, fill = "pink", color = "brown", alpha = 0.7) +
+  labs(title = "Histograma de edad", x = "Edad", y = "Frecuencia") +
+  theme_minimal()
+
+# Imc
+ggplot(data_inter, aes(x = imc)) +
+  geom_histogram(binwidth = 0.5, fill = "pink", color = "brown", alpha = 0.7) +
+  labs(title = "Histograma del imc", x = "IMC", y = "Frecuencia") +
+  theme_minimal()
+
+# Hijos
+ggplot(data_inter, aes(x = hijos)) +
+  geom_histogram(binwidth = 0.5, fill = "pink", color = "brown", alpha = 0.7) +
+  labs(title = "Histograma del número de hijos", x = "Hijos", y = "Frecuencia") +
+  theme_minimal()
+
+# clm
+ggplot(data_inter, aes(x = clm)) +
+  geom_histogram(binwidth = 0.5, fill = "pink", color = "brown", alpha = 0.7) +
+  labs(title = "Histograma del clm", x = "CLM", y = "Frecuencia") +
+  theme_minimal()
+
+# b) Calcule la media de monto de reclamación por sexo
+mean_men <- data_inter%>%
+  filter(sexo == "masculino") %>%
+  summarise(men = mean(clm))
+print(mean_men)
+
+mean_women <- data_inter%>%
+  filter(sexo == "femenino") %>%
+  summarise(women = mean(clm))
+print(mean_women)
+
+# c) Calcule la media del monto de reclamación por fumador y sexo
+mean_men_fum <- data_inter%>%
+  filter(sexo == "masculino", fumador=="s\xed") %>%
+  summarise(men_fum = mean(clm))
+print(mean_men_fum)
+
+mean_women_fum <- data_inter%>%
+  filter(sexo == "femenino", fumador=="s\xed") %>%
+  summarise(women_fum = mean(clm))
+print(mean_women_fum)
+
+# d) Identifique la region con mayor monto promedio de reclamación
+region_may <- data_inter%>%
+  group_by(region)%>%
+  summarise(monto = sum(clm,na.rm = T))%>%
+  arrange(desc(monto))%>%
+  head(1)
+print(region_may)
+
+# e) Cree una columna con la etiqueta obesidad si el imc es mayor a 30
+data_inter <- data_inter%>%
+  mutate(obes = ifelse(imc>30, imc,NA))
+print(data_inter)
+
+# f) Idenfique el top 10 de personas obesas indicando: edad, sexo, hijos, monto de reclamación y región
+
+top <- data_inter%>%
+  arrange(desc(obes)) %>%
+  head(10)
+print(top)
+```
