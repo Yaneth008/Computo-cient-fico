@@ -1,0 +1,394 @@
+---
+title: "Práctica 3"
+author: "Medina Orihuela Wendy Yaneth"
+date: "2025-04-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(pacman)
+p_load(haven, dplyr, factoextra, FactorMineR, readr, rgl, fpc, psych, readxl)
+```
+
+# Data_pca
+```{r}
+data_pca <- read.csv2("data_pca.csv")
+data_pca <- data_pca %>% 
+  select(-y)
+head(data_pca, 10)
+```
+
+## Normalizar datos
+```{r}
+data_pca_1 <- scale(data_pca[,-1])
+```
+
+## Datos normalizados
+```{r}
+head(data_pca_1, 10)
+```
+
+## Diagnóstico para el PCA
+```{r}
+det(cor(data_pca_1))
+```
+Calculando el determinante de la matriz de corralaciones, el cual indica la colinealidad entre las variables. el valor de 0.01003869 indica que hay buena correlación entre las variables
+
+# Análisis de componentes principales
+```{r}
+pca <- princomp(data_pca_1)
+pca$loadings
+```
+
+## Diagnóstico
+```{r}
+summary(pca) 
+```
+Los primeros 6 componentes son suficientes para resumir más del 70% de la variabilidad de los datos.
+Esto significa que se puede reducir las variables originales a 6 componentes sin perder mucha información.
+
+## Revisar varianza y eigenvalores
+```{r}
+fviz_eig(pca, choice = "variance")
+```
+Se observa que solo la componente 1  aporta la mayor varianza
+```{r}
+fviz_eig(pca, choice = "eigenvalue")
+```
+Solo 5 componentes tienen eigenvalores mayores a la unidad, lo adecuado es extraer cinco factores
+
+## Análisis gráfico
+```{r}
+fviz_pca_ind(pca, 
+             col.ind = "cos2", 
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+Cada color indica que tan bien representado esta el individuo. Los verdes se encuentran bien representados por los componentes, mientras que el color amarillo su representación es moderada y los de color rojo, están mal representados en la proyección.
+
+## Gráfico de las cargas
+```{r}
+fviz_pca_var(pca,
+             col.var = "contrib",
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+Las variables x1, x2 son las que más contribuyen a diferenciar los datos.
+La mayoría de las otras variables están positivamente correlacionadas entre sí y cargan principalmente en el primer componente.
+
+## Visualización de las puntuaciones
+```{r}
+fviz_pca_biplot(pca,
+                col.var = "red",
+                col.ind = "black")
+```
+Se muestra que aunque hay algunas variables que logran separar a los individuos, la mayor parte de la variabilidad todavía está dispersa.
+
+## Gráfico de color
+```{r}
+psych::cor.plot(data_pca_1)
+```
+Se muestra la correlación entre cada una de las variables.
+
+## PCA rotando los factores
+```{r}
+pca2 <- psych::principal(data_pca_1, nfactors = 6, residuals = FALSE, rotate = "varimax", scores = TRUE, oblique.scores = FALSE, method = "regression", use = "pairwise", cor = "cor", weight = NULL); pca2
+```
+
+## Matriz de coeficientes (1)
+```{r}
+pca2$weights[,1]
+```
+
+## Matriz de coeficientes (2)
+```{r}
+pca2$weights[,2]
+```
+
+## Matriz de coeficientes (3)
+```{r}
+pca2$weights[,3]
+```
+
+## Matriz de coeficientes (4)
+```{r}
+pca2$weights[,4]
+```
+
+## Matriz de coeficientes (5)
+```{r}
+pca2$weights[,5]
+```
+
+## Matriz de coeficientes (6)
+```{r}
+pca2$weights[,6]
+```
+
+## Variables
+```{r}
+head(pca2$scores, 10)
+```
+
+
+
+
+
+
+# PoblacionUSA
+
+```{r}
+PoblacionUSA <- read_excel("PoblacionUSA.xlsm", sheet = 1)
+```
+
+# Año 2020
+```{r}
+data_PoblacionUSA2020 <- PoblacionUSA %>% 
+  select(State = 1, contains("2020"))
+head(data_PoblacionUSA2020, 10)
+```
+
+# Año 2021
+```{r}
+data_PoblacionUSA2021 <- PoblacionUSA %>% 
+  select(State = 1, contains("2021"))
+head(data_PoblacionUSA2021, 10)
+```
+
+
+# Año 2020
+## Normalizar datos
+```{r}
+data_PoblacionUSA2020_1 <- scale(data_PoblacionUSA2020[,-1])
+```
+
+## Datos normalizados
+```{r}
+head(data_PoblacionUSA2020_1, 10)
+```
+
+# Análisis de componentes principales
+## Factor de adecuación muestral de kaiser-Meyer-Olkin
+```{r}
+psych::KMO(data_PoblacionUSA2020_1)
+```
+
+## Diagnóstico para el PCA
+```{r}
+det(cor(data_PoblacionUSA2020_1))
+```
+Calculando el determinante de la matriz de corralaciones, el cual indica la colinealidad entre las variables. el valor de 1.359132e-40 indica que hay bastante correlación entre las variables
+
+## Análisis de componentes principales
+```{r}
+pca_PoblacionUSA2020 <- princomp(data_PoblacionUSA2020_1)
+pca_PoblacionUSA2020$loadings
+```
+
+## Diagnóstico
+```{r}
+summary(pca_PoblacionUSA2020) 
+```
+Los primeros 2 componentes son suficientes para resumir más del 70% de la variabilidad de los datos.
+Esto significa que se puede reducir las variables originales a 2 componentes sin perder mucha información.
+
+## Revisar varianza y eigenvalores
+```{r}
+fviz_eig(pca_PoblacionUSA2020, choice = "variance")
+```
+Se observa que solo la componente 1  aporta la mayor varianza
+```{r}
+fviz_eig(pca_PoblacionUSA2020, choice = "eigenvalue")
+```
+Solo 2 componentes tienen eigenvalores mayores a la unidad, lo adecuado es extraer dos factores
+
+## Análisis gráfico
+```{r}
+fviz_pca_ind(pca_PoblacionUSA2020, 
+             col.ind = "cos2", 
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+Cada color indica que tan bien representado esta el individuo. Los verdes se encuentran bien representados por los componentes, mientras que el color amarillo su representación es moderada y los de color rojo, están mal representados en la proyección.
+
+## Gráfico de las cargas
+```{r}
+fviz_pca_var(pca_PoblacionUSA2020,
+             col.var = "contrib",
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+Las variables relacionadas con migración y movimiento de personas son las que más contribuyen a diferenciar los datos.
+La mayoría de las otras variables están positivamente correlacionadas entre sí y cargan principalmente en el primer componente.
+
+## Visualización de las puntuaciones
+```{r}
+fviz_pca_biplot(pca_PoblacionUSA2020,
+                col.var = "red",
+                col.ind = "black")
+```
+Se muestra que aunque hay algunas variables que logran separar a los individuos, la mayor parte de la variabilidad todavía está dispersa.
+
+## Gráfico de color
+```{r}
+psych::cor.plot(data_PoblacionUSA2020_1)
+```
+Se muestra la correlación entre cada una de las variables.
+
+## PCA rotando los factores
+```{r}
+pca2_PoblacionUSA2020 <- psych::principal(data_PoblacionUSA2020_1, nfactors = 6, residuals = FALSE, rotate = "varimax", scores = TRUE, oblique.scores = FALSE, method = "regression", use = "pairwise", cor = "cor", weight = NULL); pca2_PoblacionUSA2020
+```
+
+## Matriz de coeficientes (1)
+```{r}
+pca2_PoblacionUSA2020$weights[,1]
+```
+
+## Matriz de coeficientes (2)
+```{r}
+pca2_PoblacionUSA2020$weights[,2]
+```
+
+## Matriz de coeficientes (3)
+```{r}
+pca2_PoblacionUSA2020$weights[,3]
+```
+
+## Matriz de coeficientes (4)
+```{r}
+pca2_PoblacionUSA2020$weights[,4]
+```
+
+## Matriz de coeficientes (5)
+```{r}
+pca2_PoblacionUSA2020$weights[,5]
+```
+
+## Matriz de coeficientes (6)
+```{r}
+pca2_PoblacionUSA2020$weights[,6]
+```
+
+## Variables
+```{r}
+head(pca2_PoblacionUSA2020$scores, 10)
+```
+
+
+# Año 2021
+## Normalizar datos
+```{r}
+data_PoblacionUSA2021_1 <- scale(data_PoblacionUSA2021[,-1])
+```
+
+## Datos normalizados
+```{r}
+head(data_PoblacionUSA2021_1, 10)
+```
+
+# Análisis de componentes principales
+## Factor de adecuación muestral de kaiser-Meyer-Olkin
+```{r}
+psych::KMO(data_PoblacionUSA2021_1)
+```
+
+## Diagnóstico para el PCA
+```{r}
+det(cor(data_PoblacionUSA2021_1))
+```
+Calculando el determinante de la matriz de corralaciones, el cual indica la colinealidad entre las variables. el valor de -3.985373e-26 indica que las variables son linealmente independientes entre si.
+
+## Análisis de componentes principales
+```{r}
+pca_PoblacionUSA2021 <- princomp(data_PoblacionUSA2021_1)
+pca_PoblacionUSA2021$loadings
+```
+
+## Diagnóstico
+```{r}
+summary(pca_PoblacionUSA2021) 
+```
+Los primeros 2 componentes son suficientes para resumir más del 70% de la variabilidad de los datos.
+Esto significa que se puede reducir las variables originales a 2 componentes sin perder mucha información, como en el año 2020.
+
+## Revisar varianza y eigenvalores
+```{r}
+fviz_eig(pca_PoblacionUSA2021, choice = "variance")
+```
+Se observa que solo la componente 1  aporta la mayor varianza
+```{r}
+fviz_eig(pca_PoblacionUSA2021, choice = "eigenvalue")
+```
+Solo 2 componentes tienen eigenvalores mayores a la unidad, lo adecuado es extraer dos factores
+
+## Análisis gráfico
+```{r}
+fviz_pca_ind(pca_PoblacionUSA2021, 
+             col.ind = "cos2", 
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+Cada color indica que tan bien representado esta el individuo. Los verdes se encuentran bien representados por los componentes, mientras que el color amarillo su representación es moderada y los de color rojo, están mal representados en la proyección.
+
+## Gráfico de las cargas
+```{r}
+fviz_pca_var(pca_PoblacionUSA2021,
+             col.var = "contrib",
+             gradient.cols=c("red", "yellow", "green"),
+             repel = FALSE)
+```
+
+## Visualización de las puntuaciones
+```{r}
+fviz_pca_biplot(pca_PoblacionUSA2021,
+                col.var = "red",
+                col.ind = "black")
+```
+Se muestra que aunque hay algunas variables que logran separar a los individuos, la mayor parte de la variabilidad todavía está dispersa.
+
+## Gráfico de color
+```{r}
+psych::cor.plot(data_PoblacionUSA2021_1)
+```
+Se muestra la correlación entre cada una de las variables.
+
+## PCA rotando los factores
+```{r}
+pca2_PoblacionUSA2021 <- psych::principal(data_PoblacionUSA2021_1, nfactors = 6, residuals = FALSE, rotate = "varimax", scores = TRUE, oblique.scores = FALSE, method = "regression", use = "pairwise", cor = "cor", weight = NULL); pca2_PoblacionUSA2020
+```
+
+## Matriz de coeficientes (1)
+```{r}
+pca2_PoblacionUSA2021$weights[,1]
+```
+
+## Matriz de coeficientes (2)
+```{r}
+pca2_PoblacionUSA2021$weights[,2]
+```
+
+## Matriz de coeficientes (3)
+```{r}
+pca2_PoblacionUSA2021$weights[,3]
+```
+
+## Matriz de coeficientes (4)
+```{r}
+pca2_PoblacionUSA2021$weights[,4]
+```
+
+## Matriz de coeficientes (5)
+```{r}
+pca2_PoblacionUSA2021$weights[,5]
+```
+
+## Matriz de coeficientes (6)
+```{r}
+pca2_PoblacionUSA2021$weights[,6]
+```
+
+## Variables
+```{r}
+head(pca2_PoblacionUSA2021$scores, 10)
+```
